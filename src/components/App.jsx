@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { Component, useState, useEffect} from 'react';
 import { nanoid } from 'nanoid';
 
 import { savedData } from 'data';
@@ -6,7 +6,50 @@ import { ContactForm } from './ContactForm/ContactForm';
 import { Filter } from './Filter/Filter';
 import ContactList from './ContactList/ContactList';
 
-export class App extends Component {
+export const App = () => {
+  const [contacts, setContacts] = useState(() =>
+    localStorage.getItem('contacts')
+      ? JSON.parse(localStorage.getItem('contacts'))
+      : savedData
+  );
+
+  const [filter, setFilter] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
+
+  const deleteContact = delId => {
+    setContacts(contacts.filter(({ id }) => id !== delId));
+  };
+
+  const handleForm = row => {
+    if (contacts.find(({ name }) => name === row.name)) {
+      alert(`${row.name} is already in contacts`);
+      return;
+    }
+    setContacts(prev => [{ id: nanoid(), ...row }, ...prev]);
+  };
+
+  const handleChangeFilter = e => setFilter(e.target.value);
+
+  return (
+    <div>
+      <h1 style={{ textAlign: "center" }}>Phonebook</h1>
+      <ContactForm onForm={handleForm} />
+
+      <h2 style={{ textAlign: "center" }}>Contacts</h2>
+      <Filter value={filter} handlerChangeFilter={handleChangeFilter} />
+      <ContactList
+        filter={filter}
+        contacts={contacts}
+        onDelete={deleteContact}
+      />
+    </div>
+  );
+};
+
+export class oldApp extends Component {
   state = {
     contacts: [],
     filter: '',
@@ -45,7 +88,7 @@ export class App extends Component {
     });
   };
 
-  handlerChangeFilter = el => this.setState({ filter: el.target.value });
+  handlerChangeFilter = e => this.setState({ filter: e.target.value });
 
   render() {
     const { filter, contacts } = this.state;
